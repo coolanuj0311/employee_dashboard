@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employer Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f3f3f3;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .dashboard {
+            font-size: 36px;
+            color: #000;
+            margin: 0;
+            margin-left: 200px;
+        }
+
+        .container {
+            max-width: 1050px;
+            margin: 0 auto;
+            text-align: center;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+
+        .box {
+            width: 501px;
+            height: 150px;
+            border: 2px solid #4CAF50;
+            background-color: #fff;
+            margin: 10px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .box:hover {
+            transform: scale(1.05);
+        }
+
+        .box-content {
+            padding: 10px;
+        }
+
+        .box h2 {
+            color: #4CAF50;
+            margin-top: 0;
+            font-size: 18px;
+        }
+
+        .box p {
+            color: #666;
+            margin: 0;
+            font-size: 24px;
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+
+        .details {
+            font-size: 12px;
+            color: #4CAF50;
+            cursor: pointer;
+            transition: color 0.3s;
+            text-decoration: none;
+        }
+
+        .details:hover {
+            color: #2e7d32;
+        }
+
+        .chart-container {
+            max-width: 1054px;
+            margin: 20px auto;
+            border: 1px solid #000;
+            padding: 20px;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .total-enrollment {
+            font-size: 24px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 class="dashboard">Employee Dashboard</h1>
+    </div>
+
+    <div class="container">
+        <div class="box">
+            <div class="box-content">
+                <h2>Number of Incomplete Courses</h2>
+                <p class="number"> {{ incomplete_courses_count }}</p>
+                <a href="course-details.html" class="details">View Details</a>
+            </div>
+        </div>
+        <div class="box">
+            <div class="box-content">
+                <h2>Number of completed Courses</h2>
+                <p class="number"> {{ completed_courses_count }}</p>
+                <a href="company-details.html" class="details">View Details</a>
+            </div>
+        </div>
+    </div>
+
+   
+
+    <div class="chart-container">
+        <h2 class="total-enrollment">Course Progress</h2>
+        <canvas id="courseProgressChart"></canvas>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    var courseProgressData = {{ course_progress_list | safe }};
+    var courseNames = [];
+    var progressPercentages = [];
+
+    courseProgressData.forEach(function(course) {
+        courseNames.push(course.course_name);
+        progressPercentages.push(course.progress);
+    });
+
+    var ctx = document.getElementById('courseProgressChart').getContext('2d');
+    var courseProgressChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: courseNames,
+            datasets: [{
+                label: 'Progress Percentage',
+                data: progressPercentages,
+                backgroundColor: '#5D42D1',
+                borderColor: '#5D42D1',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            indexAxis: 'y', // Rotate the chart to make the y-axis horizontal
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Percentage'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Courses'
+                    }
+                }
+            }
+        }
+    });
+</script>
+
+
+     
+       
+          <div class="logic-inverter">
+            <div class="value-comparator">
+              <div class="output-aggregator">
+                <div class="loop-control">
+                  <div class="course-1">Course 1</div>
+                </div>
+                <div class="variable-holder1">
+                  <div class="logic-gate-parent">
+                    <div class="logic-gate">
+                      <div class="completed">100% Completed</div>
+                    </div>
+                    <div class="error-handler">
+                      <img
+                        class="error-handler-child"
+                        loading="lazy"
+                        alt=""
+                        src="./public/line-82.svg"
+                      />
+
+                      <img
+                        class="error-handler-item"
+                        loading="lazy"
+                        alt=""
+                        src="./public/line-83.svg"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div class="output-aggregator-child"></div>
+                <div class="function-invoker">
+                  <button class="decision-tree">
+                    <div class="info">Info</div>
+                  </button>
+                  <div class="edge-connector-parent">
+                    <div class="edge-connector">
+                      <img class="subgraph-icon" alt="" />
+                    </div>
+                    <div class="completed1">completed</div>
+                  </div>
+                </div>
+                <img
+                  class="more-vertical-circle-01-icon"
+                  loading="lazy"
+                  alt=""
+                />
+              </div>
+              <footer class="sequence-splitter">
+                <div class="tree-printer">
+                  <div class="branch-merger">
+                    <div class="data-shifter">
+                      <div class="course-2">Course 2</div>
+                    </div>
+                    <div class="iterator-manager">
+                      <div class="completed2">0% Completed</div>
+                      <img
+                        class="iterator-manager-child"
+                        loading="lazy"
+                        alt=""
+                        src="./public/line-82.svg"
+                      />
+                    </div>
+                  </div>
+                  <div class="pair-comparator-chain">
+                    <button class="function-call-chain">
+                      <div class="info1">Info</div>
+                    </button>
+                    <button class="tree-analyzer">
+                      <div class="start">Start</div>
+                      <img
+                        class="vector-icon"
+                        alt=""
+                        src="./public/vector-1.svg"
+                      />
+                    </button>
+                    <div class="branch-condition">
+                      <img
+                        class="more-vertical-circle-01-icon1"
+                        loading="lazy"
+                        alt=""
+                        src="./public/moreverticalcircle01-1.svg"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </footer>
+              <div class="sequence-splitter1">
+                <div class="frame-group">
+                  <div class="frame-container">
+                    <div class="course-3-wrapper">
+                      <div class="course-3">Course 3</div>
+                    </div>
+                    <div class="completed-parent">
+                      <div class="completed3">0% Completed</div>
+                      <img class="frame-child" alt="" />
+                    </div>
+                  </div>
+                  <div class="frame-div">
+                    <div class="info-wrapper">
+                      <div class="info2">Info</div>
+                    </div>
+                    <div class="start-parent">
+                      <div class="start1">Start</div>
+                      <img class="vector-icon1" alt="" />
+                    </div>
+                    <div class="more-vertical-circle-01-wrapper">
+                      <img class="more-vertical-circle-01-icon2" alt="" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="sequence-splitter2">
+                <div class="frame-parent1">
+                  <div class="frame-parent2">
+                    <div class="course-4-wrapper">
+                      <div class="course-4">Course 4</div>
+                    </div>
+                    <div class="completed-group">
+                      <div class="completed4">0% Completed</div>
+                      <img class="frame-item" alt="" />
+                    </div>
+                  </div>
+                  <div class="frame-parent3">
+                    <div class="info-container">
+                      <div class="info3">Info</div>
+                    </div>
+                    <div class="start-group">
+                      <div class="start2">Start</div>
+                      <img class="vector-icon2" alt="" />
+                    </div>
+                    <div class="more-vertical-circle-01-container">
+                      <img class="more-vertical-circle-01-icon3" alt="" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="sequence-splitter3">
+                <div class="frame-parent4">
+                  <div class="frame-parent5">
+                    <div class="course-5-wrapper">
+                      <div class="course-5">Course 5</div>
+                    </div>
+                    <div class="completed-container">
+                      <div class="completed5">0% Completed</div>
+                      <img class="frame-inner" alt="" />
+                    </div>
+                  </div>
+                  <div class="frame-parent6">
+                    <div class="info-frame">
+                      <div class="info4">Info</div>
+                    </div>
+                    <div class="start-container">
+                      <div class="start3">Start</div>
+                      <img class="vector-icon3" alt="" />
+                    </div>
+                    <div class="more-vertical-circle-01-frame">
+                      <img class="more-vertical-circle-01-icon4" alt="" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="sequence-splitter4">
+                <div class="frame-parent7">
+                  <div class="frame-parent8">
+                    <div class="course-6-wrapper">
+                      <div class="course-6">Course 6</div>
+                    </div>
+                    <div class="completed-parent1">
+                      <div class="completed6">0% Completed</div>
+                      <img class="line-icon" alt="" />
+                    </div>
+                  </div>
+                  <div class="frame-parent9">
+                    <div class="info-wrapper1">
+                      <div class="info5">Info</div>
+                    </div>
+                    <div class="start-parent1">
+                      <div class="start4">Start</div>
+                      <img class="vector-icon4" alt="" />
+                    </div>
+                    <div class="more-vertical-circle-01-wrapper1">
+                      <img class="more-vertical-circle-01-icon5" alt="" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="value-comparator-inner">
+                <div class="show-all-courses-wrapper">
+                  <div class="show-all-courses">Show all Courses</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      {% for course_progress in course_progress_list %}
+      <div class="course-progress">
+          <div class="course-name">{{ course_progress.course_name }}</div>
+          <div class="progress">{{ course_progress.progress }}% Completed</div>
+      </div>
+  {% endfor %}
+
+    
+</body>
+</html>
+
+  

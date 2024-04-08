@@ -1,0 +1,908 @@
+openapi: 3.0.3
+info:
+  title: LMS
+  version: 0.0.0
+paths:
+  /api/schema:
+    get:
+      operationId: api_schema_retrieve
+      description: |-
+        OpenApi3 schema for this API. Format can be selected via content negotiation.
+
+        - YAML: application/vnd.oai.openapi
+        - JSON: application/vnd.oai.openapi+json
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - yaml
+      - in: query
+        name: lang
+        schema:
+          type: string
+          enum:
+          - af
+          - ar
+          - ar-dz
+          - ast
+          - az
+          - be
+          - bg
+          - bn
+          - br
+          - bs
+          - ca
+          - cs
+          - cy
+          - da
+          - de
+          - dsb
+          - el
+          - en
+          - en-au
+          - en-gb
+          - eo
+          - es
+          - es-ar
+          - es-co
+          - es-mx
+          - es-ni
+          - es-ve
+          - et
+          - eu
+          - fa
+          - fi
+          - fr
+          - fy
+          - ga
+          - gd
+          - gl
+          - he
+          - hi
+          - hr
+          - hsb
+          - hu
+          - hy
+          - ia
+          - id
+          - ig
+          - io
+          - is
+          - it
+          - ja
+          - ka
+          - kab
+          - kk
+          - km
+          - kn
+          - ko
+          - ky
+          - lb
+          - lt
+          - lv
+          - mk
+          - ml
+          - mn
+          - mr
+          - ms
+          - my
+          - nb
+          - ne
+          - nl
+          - nn
+          - os
+          - pa
+          - pl
+          - pt
+          - pt-br
+          - ro
+          - ru
+          - sk
+          - sl
+          - sq
+          - sr
+          - sr-latn
+          - sv
+          - sw
+          - ta
+          - te
+          - tg
+          - th
+          - tk
+          - tr
+          - tt
+          - udm
+          - uk
+          - ur
+          - uz
+          - vi
+          - zh-hans
+          - zh-hant
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/vnd.oai.openapi:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/yaml:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/vnd.oai.openapi+json:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /lms/active/course/{course_id}/:
+    post:
+      operationId: lms_active_course_create
+      description: |-
+        view to activate the course.
+        trigger with POST request.
+        in URL : course_id of selected instance.
+        table : Course
+        if original_course field is null for this course_id 's instance:
+        updating instance field:
+                    change active from False to True
+        if not null :
+                compare course structure for set of  (content_type , content_id) of course_id in url and id of course which is mentioned in original_course.
+                if match :
+                        can't activate the course
+                if not match:
+                        activate the course by changing active from False to True
+      parameters:
+      - in: path
+        name: course_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - lms
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /lms/courses/:
+    get:
+      operationId: lms_courses_retrieve
+      description: |-
+        view to display all of the courses from course table irrespective of active status what is in courseversion table
+        triggers with GET request
+        should be allowed for only [super admin].
+
+        table : Course, CourseVersion
+
+        what will be displayed:
+                    id
+                    slug
+                    title
+                    created_at
+                    updated_at
+                    active
+                    original_course
+                    version_number
+      tags:
+      - lms
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /lms/courses/active/:
+    get:
+      operationId: lms_courses_active_retrieve
+      description: |-
+        view to display [active] courses list from course table
+        trigger with GET request
+        should be allowed for only [super admin].
+
+        table : Course
+
+        what will be displayed:
+                    id
+                    title
+                    updated_at
+                    original_course [title to be extracted on frontend]
+                    version_number
+      tags:
+      - lms
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /lms/courses/active/v1/:
+    get:
+      operationId: lms_courses_active_v1_retrieve
+      description: |2-
+            view to display [active] courses list from course table that have original_course = null and version_number = 1
+            trigger with GET request
+            should be allowed for only [super admin].
+
+            table : Course
+
+            what will be displayed:
+                        id
+                        title
+                        updated_at
+                        version_number
+        Response:
+        [
+            {
+                "id": 1,
+                "title": "Python Fundamentals",
+                "updated_at": "2024-03-22",
+                "version_number": 1
+            },
+            {
+                "id": 2,
+                "title": "Python Advanced",
+                "updated_at": "2024-03-22",
+                "version_number": 1
+            }
+        ]
+      tags:
+      - lms
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /lms/courses/derived-active/{course_id}/:
+    get:
+      operationId: lms_courses_derived_active_retrieve
+      description: |2-
+            view to display [active] courses list from course table that have original_course != null and active
+            trigger with GET request
+            should be allowed for only [super admin].
+
+            in URL : course_id
+
+            table : Course
+
+            what will be displayed:
+                        id
+                        title
+                        updated_at
+                        original_course.name
+                        version_number
+        Response:
+        {
+            "id": 1,
+            "title": "Python Advanced",
+            "updated_at": "2024-03-22",
+            "original_course": "Python Fundamentals",
+            "version_number": 2
+        }
+      parameters:
+      - in: path
+        name: course_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - lms
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /lms/courses/registered/:
+    get:
+      operationId: lms_courses_registered_retrieve
+      description: |-
+        view to display courses that are registered for that customer, whose's id is owned by user in request.
+        trigger with GET request
+        should be allowed for only [client-admin / Employer].
+
+        table : CourseRegisterRecord, Courses
+
+        what will be displayed:
+                    id
+                    title
+                    updated_at # to see how old is this course
+                    original_course [title to be extracted on frontend]
+                    version_number
+      tags:
+      - lms
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /lms/create/{course_id}/quiz/{quiz_id}/question/:
+    post:
+      operationId: lms_create_quiz_question_create
+      description: |-
+        view to create the instance of question inside quiz
+        triggers with POST request.
+        in URL : course_id and quiz_id in which we are inputting the content will be passed
+
+        if course in url is active :
+                forbidden for any furthur action
+        if course is not active:
+                        if course.original_course is null :
+                            while creating instance of question:
+                                quiz = from url
+                                figure = request body
+                                content = request body
+                                explanation = request body
+                                choice_order = request body
+                                active = false by default
+            and instance is saved
+                    if course.original_course is not null :
+                        while creating instance :
+                                if quiz in url is related with courses other than that in url :
+                                                create new instance of quiz using data of instance of quiz in url for course for in url
+                                                make sure that new instance of quiz all questions in relation with it which were with quiz in url
+                                                and add new instance of question
+                                                    quiz = newly created quiz instance
+                                                    figure = request body
+                                                    content = request body
+                                                    explanation = request body
+                                                    choice_order = request body
+                                                    active = false by default
+                                            and instance is saved
+                                            and in CourseStructure table, do editing , for content id as quiz id , and content_type as quiz for course in url change the quiz id to id of new quiz's instance's id.
+                                    make sure this new quiz instance of quiz creation and updating course structure is done  if a new instance of question is actually created, with some data in it.
+                                if quiz in url is only in relation with course in url :
+                                                while creating instance of question:
+                                                quiz = from url
+                                                figure = request body
+                                                content = request body
+                                                explanation = request body
+                                                choice_order = request body
+                                                active = false by default
+      parameters:
+      - in: path
+        name: course_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: quiz_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - lms
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /lms/create/course-register-record/:
+    post:
+      operationId: lms_create_course_register_record_create
+      description: |2-
+                view to create instances in CourseRegisterRecord.
+                trigger with POST request
+                should be allowed for only [super admin].
+
+                table : CourseRegisterRecord
+
+                in request body :
+                                list of course_id =[..., ..., ..., ...]
+                                list of customer_id =[..., ..., ..., ...]
+                in response body :
+                                each course in list will be mapped for all customers in list inside CourseRegisterRecord table
+                                by default active will be true
+
+        Request body :
+                {
+                    "course_id": [1, 2, 3],
+                    "customer_id": [101, 102, 103]
+                }
+
+        Response body :
+                {
+                    "message": "Course register records created successfully."
+                    "record": [...]
+                }
+      tags:
+      - lms
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /lms/create/course/{course_id}/course-structure/:
+    post:
+      operationId: lms_create_course_course_structure_create
+      description: |-
+        [SHOULD BE USED FOR NEW ENTRY IN COURSE STRUCTURE TABLE RATHER THAN EDITING EXISTNG ONES]
+        view is used to create instances in course structure table.
+        triggers with POST request.
+        should be allowed for only [super admin].
+
+        in URL : course_id in which we are inputting the content will be passed
+
+        table : CourseStructure
+
+        while creating instance :
+                    course = in url
+                    order_number = in request body [list]
+                    content_type = in request body [list]
+                    content_id = in request body [list]
+      parameters:
+      - in: path
+        name: course_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - lms
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /lms/create/course/{course_id}/quiz/:
+    post:
+      operationId: lms_create_course_quiz_create
+      description: |-
+        view to create quiz inside a course.
+        triggers with POST request.
+        should be allowed for only [super admin].
+
+        in URL : course_id in which we are inputting the content will be passed
+
+        table : Quiz
+
+        if course.original_course is null :
+            while creating instance :
+                    courses = id in url
+                    title = request body
+                    slug = auto generated by pre_save
+                    random_order = request body
+                    description = request body
+                    answers_at_end = request body
+                    exam_paper = t/f from request body
+                    pass_mark = request body
+                    created_at = updated_at = models.DateField(auto_now=True)
+                    active = False by default
+            and instance is saved
+        if if course.original_course is not null :
+            while creating instance :
+                    courses = id in url
+                    title = request body
+                    slug = auto generated by pre_save
+                    description = request body
+                    random_order = request body
+                    answers_at_end = request body
+                    exam_paper = t/f from request body
+                    pass_mark = request body
+                    created_at = updated_at = models.DateField(auto_now=True)
+                    active = False by default
+            and instance is saved
+            and
+            in CourseStructure table, make new instance with :
+                    course = in url
+                    order_number = filter last entry allociated with this course in courseStructure table and it's order number , and increment it by 1 for here
+                    content_type = quiz
+                    content_id = pk of newly created instance of quiz
+      parameters:
+      - in: path
+        name: course_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - lms
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /lms/create/course/{course_id}/reading-material/:
+    post:
+      operationId: lms_create_course_reading_material_create
+      description: |-
+        view to create reading material inside a course.
+        triggers with POST request.
+        should be allowed for only [super admin].
+
+        in URL : course_id  in which we are inputting the content will be passed
+
+        table : UploadReadingMaterial
+
+        if course.original_course is null :
+            while creating instance :
+                        title = request body
+                        courses = id in url
+                        reading_content = request body
+                        uploaded_at = updated_at = models.DateTimeField(auto_now=True, auto_now_add=False, null=True)
+            and instance is saved
+        if if course.original_course is not null :
+            while creating instance :
+                        title = request body
+                        courses = id in url
+                        reading_content = request body
+                        uploaded_at = updated_at = models.DateTimeField(auto_now=True, auto_now_add=False, null=True)
+            and instance is saved
+            and
+            in CourseStructure table, make new instance with :
+                    course = in url
+                    order_number = filter last entry allociated with this course in courseStructure table and it's order number , and increment it by 1 for here
+                    content_type = reading
+                    content_id = pk of newly created instance of readingmaterial
+      parameters:
+      - in: path
+        name: course_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - lms
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /lms/create/course/{course_id}/versions/:
+    post:
+      operationId: lms_create_course_versions_create
+      description: |-
+        view to create new version of already existing active course
+
+        in url : course_id of selected instance , whoes versioning we are going to do , and feed it as orginial course in newly created instance.
+
+        table : Course, Course Structure , [UploadReadingMaterial , UploadVideo , Quiz] their tables where they are in many to many relation with courses
+
+        on saving , new instance of course will be created :
+                    slug = auto generated
+                    title = same as course in url for now
+                    summary = same as course in url for now
+                    created_at = updated_at = now()
+                    active = False
+                    original_course = course id in url
+                    version_number = count the instances for which course_id in url is originalcourse, and add 2 to that count, and pass it as version_number
+        in course_structure table , taking the course_id from url, and id of newly created instance:
+                copy what is related to id in url to new instance.
+        similarly for all readingmaterial, video , quiz which are in relation with course_id in url , will be mapped with new instance too
+      parameters:
+      - in: path
+        name: course_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - lms
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /lms/create/course/{course_id}/video/:
+    post:
+      operationId: lms_create_course_video_create
+      description: |-
+        view to create video inside a course.
+        triggers with POST request.
+        should be allowed for only [super admin].
+
+        in URL : course_id in which we are inputting the content will be passed
+
+        table :  UploadVideo
+
+        if course.original_course is null :
+            while creating instance :
+                    title = request body
+                    slug = auto generated by pre_save
+                    courses = id in url
+                    video = request body
+                    summary = request body
+                    uploaded_at = auto now
+            and instance is saved
+        if if course.original_course is not null :
+            while creating instance :
+                    title = request body
+                    slug = auto generated by pre_save
+                    courses = id in url
+                    video = request body
+                    summary = request body
+                    uploaded_at = auto now
+            and instance is saved
+            and
+            in CourseStructure table, make new instance with :
+                    course = in url
+                    order_number = filter last entry allociated with this course in courseStructure table and it's order number , and increment it by 1 for here
+                    content_type = video
+                    content_id = pk of newly created instance of video
+      parameters:
+      - in: path
+        name: course_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - lms
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /lms/create/course/v1/:
+    post:
+      operationId: lms_create_course_v1_create
+      description: |-
+        view to used for creating a course instance.especially version 1 courses
+        triggers with POST request.
+        should be allowed for only [super admin].
+
+        table : Course
+
+        in request body:
+                    title , summary
+
+        while creating instance :
+                    slug = auto generated by pre_save()
+                    title = request body
+                    summary = request body
+                    created_at = updated_at = models.DateTimeField(auto_now=True)
+                    active = False
+                    original_course = null (as it is original course itself)
+                    version_number = 1
+        and instance is saved
+      tags:
+      - lms
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /lms/create/question/{question_id}/choices/:
+    post:
+      operationId: lms_create_question_choices_create
+      description: |-
+        view to create choices in choice model for question
+        triggers with POST request
+        in URL : question_id in which we are inputting the content will be passed.
+        while creating instance :
+                    question = in url
+                    choice = request body
+                    correct = request body
+      parameters:
+      - in: path
+        name: question_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - lms
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /lms/delete/course-register-record/:
+    post:
+      operationId: lms_delete_course_register_record_create
+      description: |-
+        view to delete selected instance(s) of CourseRegisterRecord
+
+        table : CourseRegisterRecord
+
+        allowed to only super-admin.
+
+        in request body :
+                    records : list of CourseRegisterRecord instances will be passed.
+        selected instances will be deleted from the courseregistration record table , and hence along with this instance , all instances from course enrollment table , which users have same customer id as that in these records will be deleted too.
+        and record of all users in course enrollment table with same customer id will have there record deleted from quizattempthistory , take if there is any.
+      tags:
+      - lms
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /lms/display/course-register-record/:
+    get:
+      operationId: lms_display_course_register_record_retrieve
+      description: |-
+        view to display all instances of CourseRegisterRecord Table.
+        trigger with GET request
+
+        table : CourseRegisterRecord, Customer , Course
+
+        what will be displayed:
+                    id
+                    customer.title,
+                    course.title,
+                    created_at,
+                    active
+      tags:
+      - lms
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /lms/display/registered-course/:
+    get:
+      operationId: lms_display_registered_course_retrieve
+      description: |-
+        view to display data about list of courses on which customer is registered to use.
+        trigger with GET request
+        should be allowed for only [Employer].
+
+        table : Course, CourseRegisterRecord
+        what will be displayed:
+                        list course.id, course.title [course_id to be retrieved from CourseRegisterRecord]
+      tags:
+      - lms
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /lms/display/users/:
+    get:
+      operationId: lms_display_users_retrieve
+      description: |-
+        view to display data about list of user which have customer id same as that of user in request.
+        trigger with GET request
+        should be allowed for only [Employer].
+
+        table : User
+        what will be displayed:
+                        id, first_name, last_name, status
+      tags:
+      - lms
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /lms/enrollments/assign/:
+    post:
+      operationId: lms_enrollments_assign_create
+      description: |-
+        this API is used to assign course to specified user(s) for all users in courseenrollment table who have active false
+        in request body : list of ids of instance of course enrollment table
+
+        Method: POST
+        Parameters:
+            - enrollment_ids (list of integers): IDs of course enrollment instances to assign, who have active status false for now
+
+        It is triggered with POST request.
+      tags:
+      - lms
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /lms/enrollments/unassign/:
+    post:
+      operationId: lms_enrollments_unassign_create
+      description: |-
+        this API is used to unassign course to specified user(s) by turning the active false , and hide visibility of course to user(s).
+        required inputs : list of ids of instance of course enrollment table
+
+        Method: POST
+        Parameters:
+            - enrollment_ids (list of integers): IDs of course enrollment instances to unassign.
+
+        It is triggered with POST request.
+      tags:
+      - lms
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /lms/inactive/course/{course_id}/:
+    post:
+      operationId: lms_inactive_course_create
+      description: |-
+        view to inactivate the course.
+        trigger with POST request.
+        in URL : course_id of selected instance.
+        table : Course
+
+        do it by giving warning by counting the number of instances in course enrollment table where course_id is same as that in url and active is True. [to tell how many people are studying the course now]
+
+        updating instance field:
+                    change active from True to False
+      parameters:
+      - in: path
+        name: course_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - lms
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /lms/lms-customer/:
+    get:
+      operationId: lms_lms_customer_retrieve
+      description: |-
+        view to display  list of customers who have resource privilege of LMS and are active
+        trigger with GET request
+        should be allowed for only [super admin].
+
+        table : Customer_Resources, Resources , Customer
+
+        what will be displayed:
+                    id
+                    titles of customer
+      tags:
+      - lms
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

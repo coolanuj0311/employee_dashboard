@@ -1,0 +1,180 @@
+=============================================================================================================
+To display the list of instances of the `CourseStructure` model along with their corresponding content,
+you can use the `SingleCourseStructureListDisplayView` API view. Here's how you can implement it:
+
+```python
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from .models import CourseStructure, UploadReadingMaterial, UploadVideo, Quiz
+
+class SingleCourseStructureListDisplayView(APIView):
+    """
+    View to display the list of instances of the course structure table, whose course ID is in the URL.
+    Triggered with a GET request.
+    Should be allowed for all users who have access to LMS.
+    """
+
+    def get(self, request, course_id):
+        # Retrieve all course structures for the given course ID
+        course_structures = CourseStructure.objects.filter(course_id=course_id)
+
+        # Initialize an empty list to store the serialized data
+        serialized_data = []
+
+        # Iterate through each course structure instance
+        for structure in course_structures:
+            # Serialize the course structure instance
+            serialized_structure = {
+                "order_number": structure.order_number,
+                "content_type": structure.content_type,
+                "content_id": structure.content_id
+            }
+
+            # Fetch and include the content for the current structure
+            content = structure.get_content()
+            if content:
+                serialized_structure["content"] = content.serialize()  # Assuming you have a serialize method in each content model
+
+            # Append the serialized structure to the list
+            serialized_data.append(serialized_structure)
+
+        # Return the serialized data as a JSON response
+        return Response(serialized_data)
+```
+
+In this view:
+
+- We first retrieve all instances of `CourseStructure` that belong to the specified course ID (`course_id`).
+
+- Then, for each `CourseStructure` instance, we serialize its fields (`order_number`, `content_type`, `content_id`). Additionally, we fetch the corresponding content based on the `content_type` and include it in the serialized data.
+
+- Assuming that the content models (`UploadReadingMaterial`, `UploadVideo`, `Quiz`) have a `serialize()` method that returns a serialized representation of the content, we call this method and include the serialized content in the response.
+
+- Finally, we return the serialized data as a JSON response.
+
+Make sure to adjust the `serialize()` method according to your content models to provide the appropriate serialized representation of the content.
+=============================================================================================================
+
+extended logic and code for course versioning :
+it's post method :
+    def post(self, request, course_id, *args, **kwargs):
+        try:
+            original_course = Course.objects.get(pk=course_id)
+        except Course.DoesNotExist:
+            return Response({"error": "Original course not found"}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            # Create new course instance based on original course
+            new_course_data = CourseSerializer(original_course).data
+            new_course_data['active'] = False
+            new_course_data['original_course'] = original_course
+            new_course_data['created_at'] = timezone.now()  # Set created_at to current time
+            new_course_data['updated_at'] = timezone.now()
+            new_course_data['version_number'] = Course.objects.filter(original_course=original_course).count() + 2
+            new_course_serializer = CourseSerializer(data=new_course_data)
+            if new_course_serializer.is_valid():
+                new_course = new_course_serializer.save()
+            else:
+                return Response({"error": new_course_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Copy course structure from original course
+            original_course_structure = CourseStructure.objects.filter(course=original_course)
+            for structure in original_course_structure:
+                structure_data = CourseStructureSerializer(structure).data
+                structure_data['course'] = new_course.pk
+                structure_serializer = CourseStructureSerializer(data=structure_data)
+                if structure_serializer.is_valid():
+                    structure_serializer.save()
+                else:
+                    return Response({"error": structure_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Copy related UploadReadingMaterial
+            related_reading_materials = UploadReadingMaterial.objects.filter(courses=original_course)
+            for material in related_reading_materials:
+                material_data = UploadReadingMaterialSerializer(material).data
+                material_data['courses'] = [new_course.pk]
+                material_serializer = UploadReadingMaterialSerializer(data=material_data)
+                if material_serializer.is_valid():
+                    material_serializer.save()
+                else:
+                    return Response({"error": material_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+                
+            # Copy related UploadVideo
+            related_videos = UploadVideo.objects.filter(courses=original_course)
+            for video in related_videos:
+                video_data = UploadVideoSerializer(video).data
+                video_data['courses'] = [new_course.pk]
+                video_serializer = UploadVideoSerializer(data=video_data)
+                if video_serializer.is_valid():
+                    video_serializer.save()
+                else:
+                    return Response({"error": video_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+                
+            # Copy related Quiz
+            related_quizzes = Quiz.objects.filter(courses=original_course)
+            for quiz in related_quizzes:
+                quiz_data = QuizSerializer(quiz).data
+                quiz_data['courses'] = [new_course.pk]
+                quiz_serializer = QuizSerializer(data=quiz_data)
+                if quiz_serializer.is_valid():
+                    quiz_serializer.save()
+                else:
+                    return Response({"error": quiz_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            
+            return Response({"message": "New version of course created successfully."}, status=status.HTTP_201_CREATED)
+        
+        except Course.DoesNotExist:
+            return Response({"error": "Original course not found."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+----------------------------------------------------------------
+# class RegisterCoursesOnCostumerListDisplayView(APIView):
+#     """
+#         view to display courses that are registered for that customer, whose's id is owned by user in request.
+#         trigger with GET request
+#         should be allowed for only [client-admin / Employer].
+        
+#         table : CourseRegisterRecord, Courses
+        
+#         what will be displayed:
+#                     id
+#                     title
+#                     updated_at # to see how old is this course
+#                     original_course [title to be extracted on frontend]
+#                     version_number
+#     """
+#     '''
+#     how will we do it ?
+#             first extract user from request and then extract it's customer id
+#             filter CourseRegisterRecord with that customer id     TODO :[and active to be True]
+#             make list of courses that are filtered 
+#             get the instances of Courses whose id is in list.
+#     '''
+#     def get(self, request, format=None):
+#         try:
+#             # ********************************
+#             # to be originally used
+#             '''# Extract user from request
+#             user = request.user
+#             print(user)
+#             # Extract customer ID from user
+#             customer_id = user.customer.id'''
+#             # ********************************
+#             # =================================================================
+#             user_header = request.headers.get("user")
+#             if user_header:
+#                 user_data = json.loads(user_header)
+#                 customer_id = user_data.get("customer")
+#             # =================================================================
+#             # Filter CourseRegisterRecord with customer ID
+#             course_register_records = CourseRegisterRecord.objects.filter(customer=customer_id, active=True)
+#             # Get the list of course IDs
+#             course_ids = [record.course_id for record in course_register_records]
+#             # Get instances of Course whose IDs are in the list
+#             courses = Course.objects.filter(id__in=course_ids)
+#             # Serialize the courses data
+#             serializer = ClientAdminRegisteredCourseDisplaySerializer(courses, many=True)
+#             return Response(serializer.data, status=status.HTTP_200_OK)
+#         except Exception as e:
+#             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
