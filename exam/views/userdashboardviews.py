@@ -107,6 +107,37 @@ class CreateCourseCompletionStatusPerUserView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 
+class UpdateCompleteQuizCountView(APIView):
+    """
+    POST request
+    triggered when quiz attempt history for that course, that user have completed =true , if set of quiz, course, user doesn't already have completed = true in table
+    while updating instance :
+        completed_quiz_count = increment by 1
+    """
+    def post(self, request):
+        try:
+            # Extract data from request
+            course_id = request.data.get('course_id')
+            user_id = request.data.get('user_id')
+
+            # Validate request data
+            if not (course_id and user_id):
+                return Response({'error': 'course_id and user_id are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check if the quiz attempt history indicates completion for the user and course
+            if QuizAttemptHistory.objects.filter(course_id=course_id, enrolled_user_id=user_id, complete=True).exists():
+                # Update completed_quiz_count for the corresponding record
+                quiz_score = QuizScore.objects.get(course_id=course_id, enrolled_user_id=user_id)
+                quiz_score.completed_quiz_count += 1
+                quiz_score.save()
+                return Response({'message': 'Completed quiz count updated successfully'}, status=status.HTTP_200_OK)
+            else:
+                raise QuizScore.DoesNotExist('No completed quiz found for the user and course')
+        except (QuizScore.DoesNotExist, Exception) as e:
+            if isinstance(e, QuizScore.DoesNotExist):
+                raise NotFound(detail='Quiz score record not found')
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
 
 class CreateQuizScoreView(APIView):
     """
@@ -156,36 +187,7 @@ class CreateQuizScoreView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class UpdateCompleteQuizCountView(APIView):
-    """
-    POST request
-    triggered when quiz attempt history for that course, that user have completed =true , if set of quiz, course, user doesn't already have completed = true in table
-    while updating instance :
-        completed_quiz_count = increment by 1
-    """
-    def post(self, request):
-        try:
-            # Extract data from request
-            course_id = request.data.get('course_id')
-            user_id = request.data.get('user_id')
 
-            # Validate request data
-            if not (course_id and user_id):
-                return Response({'error': 'course_id and user_id are required'}, status=status.HTTP_400_BAD_REQUEST)
-
-            # Check if the quiz attempt history indicates completion for the user and course
-            if QuizAttemptHistory.objects.filter(course_id=course_id, enrolled_user_id=user_id, complete=True).exists():
-                # Update completed_quiz_count for the corresponding record
-                quiz_score = QuizScore.objects.get(course_id=course_id, enrolled_user_id=user_id)
-                quiz_score.completed_quiz_count += 1
-                quiz_score.save()
-                return Response({'message': 'Completed quiz count updated successfully'}, status=status.HTTP_200_OK)
-            else:
-                raise QuizScore.DoesNotExist('No completed quiz found for the user and course')
-        except (QuizScore.DoesNotExist, Exception) as e:
-            if isinstance(e, QuizScore.DoesNotExist):
-                raise NotFound(detail='Quiz score record not found')
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 
@@ -299,51 +301,8 @@ class DisplayClientCourseProgressView(APIView):
             for enrollment in course_enrollments:
                 quiz_score = QuizScore.objects.filter(course_id=enrollment.course_id, enrolled_user_id=user_id).first()
                 if quiz_score:
-                    total_score = quiz_score.total_score_per_course
+                   
                     progress_percentage = 0
-                    if quiz_score.total_quizzes_per_course > 0:
-                        progress_percentage = (quiz_score.completed_quiz_count / quiz_score.total_quizzes_per_course) * 100
-                    progress_data.append({
-                        'course_id': enrollment.course_id,
-                        'course_name': enrollment.course.title,
-                        'completed_quiz_count': quiz_score.completed_quiz_count,
-                        'total_quizzes_per_course': quiz_score.total_quizzes_per_course,
-                        'progress_percentage': progress_percentage
-                    })
-
-            return Response({'progress': progress_data}, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-
-class DisplayClientCourseCompletionStatusView(APIView):
-    """
-    GET request
-    for user in request, if he has data in course enrollment table(active)
-    display:
-        completion_status or in_progress_status = Based on which is true for the user for this course
-    """
-    def get(self, request):
-        try:
-            # Extract user ID from request
-            user_id = request.query_params.get('user_id')
-
-            # Validate request data
-            if not user_id:
-                return Response({'error': 'user_id is required'}, status=status.HTTP_400_BAD_REQUEST)
-
-            # Check if the user has active enrollment for any course
-            course_enrollments = CourseEnrollment.objects.filter(user_id=user_id, active=True)
-
-            if not course_enrollments:
-                return Response({'message': 'No active enrollment found for the user'}, status=status.HTTP_404_NOT_FOUND)
-
-            # Display course completion status or in-progress status for each active enrollment
-            status_data = []
-            for enrollment in course_enrollments:
-                quiz_score = QuizScore.objects.filter(course_id=enrollment.course_id, enrolled_user_id=user_id).first()
-                if quiz_score:
                     total_quiz_count = quiz_score.total_quizzes_per_course
                     completed_quiz_count = quiz_score.completed_quiz_count
 
@@ -357,22 +316,31 @@ class DisplayClientCourseCompletionStatusView(APIView):
                     else:
                         completion_status = False
                         in_progress_status = True
-
-                    status_data.append({
+                    if quiz_score.total_quizzes_per_course > 0:
+                        progress_percentage = (quiz_score.completed_quiz_count / quiz_score.total_quizzes_per_course) * 100
+                    
+                    progress_data.append({
                         'course_id': enrollment.course_id,
-                        'completion_status': completion_status,
+                        'course_name': enrollment.course.title,
+                        'completed_quiz_count': quiz_score.completed_quiz_count,
+                        'total_quizzes_per_course': quiz_score.total_quizzes_per_course,
+                        'progress_percentage': progress_percentage,
+                         'completion_status': completion_status,
                         'in_progress_status': in_progress_status
                     })
 
-            return Response({'status': status_data}, status=status.HTTP_200_OK)
+            return Response({'progress': progress_data}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class CountOfAssignedCoursesView(APIView):
+
+
+
+
+class CountCoursesStatusView(APIView):
     """
-    GET request
-    for user in request, count the number of active enrollments he has in the course enrollment table
+    GET request to count the number of active enrollments and course completion status for a user.
     """
 
     def get(self, request):
@@ -381,33 +349,24 @@ class CountOfAssignedCoursesView(APIView):
             user_id = request.query_params.get('user_id')
             if not user_id:
                 return Response({'error': 'user_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+
             # Count active enrollments for the user
             active_enrollments_count = CourseEnrollment.objects.filter(user_id=user_id, active=True).count()
-            return Response({'active_enrollments_count': active_enrollments_count}, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-class CountClientCompletedCourseView(APIView):
-    """
-    GET request
-    for the user, filter the CourseCompletionStatusPerUser table
-    and count courses for which completion_status = True and in_progress_status = False as completed courses
-    and count courses for which completion_status = False and in_progress_status = True as in-progress courses
-    """
-
-    def get(self, request):
-        try:
-            # Extract user ID from request
-            user_id = request.query_params.get('user_id')
-            if not user_id:
-                return Response({'error': 'user_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+            # Count completed, in-progress, and not started courses
             completed_courses_count = CourseCompletionStatus.objects.filter(enrolled_user_id=user_id, completion_status=True, in_progress_status=False).count()
-            # Count in-progress courses
             in_progress_courses_count = CourseCompletionStatus.objects.filter(enrolled_user_id=user_id, completion_status=False, in_progress_status=True).count()
             not_started_courses_count = CourseCompletionStatus.objects.filter(enrolled_user_id=user_id, completion_status=False, in_progress_status=False).count()
-            return Response({'completed_courses_count': completed_courses_count, 'in_progress_courses_count': in_progress_courses_count,'not_started_courses_count': not_started_courses_count}, status=status.HTTP_200_OK)
+
+            return Response({
+                'active_enrollments_count': active_enrollments_count,
+                'completed_courses_count': completed_courses_count,
+                'in_progress_courses_count': in_progress_courses_count,
+                'not_started_courses_count': not_started_courses_count
+            }, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 from django.views import View
@@ -417,8 +376,8 @@ import requests
 class EmployeeDashboard(View):
     template_name = 'employee.html'
     error_template_name = 'error.html'
-    completed_courses_api_url = 'http://127.0.0.1:8000/lms/count-client-completed-courses'
-    course_progress_api_url = 'http://127.0.0.1:8000/lms/display-client-course-progress'
+    completed_courses_api_url = 'http://127.0.0.1:8000/lms/count-courses-status'
+    course_progress_api_url = 'http://127.0.0.1:8000/lms/display-client-course-progress/'
 
     def get(self, request):
         user_id = request.GET.get('user_id')

@@ -62,15 +62,17 @@ from .views.createcourseviews import (
 # )
 from django.urls import path
 from .views.userdashboardviews import (
+    CountCoursesStatusView,
     CreateCourseCompletionStatusPerUserView,
     CreateQuizScoreView,
+   
     EmployeeDashboard,
     UpdateCompleteQuizCountView,
     UpdateTotalScorePerCourseView,
     UpdateCourseCompletionStatusPerUserView,
     DisplayClientCourseProgressView,
-    DisplayClientCourseCompletionStatusView,
-    CountOfAssignedCoursesView, CountClientCompletedCourseView,
+    
+    
 
 )
 
@@ -155,10 +157,7 @@ urlpatterns = [
     path('update-total-score-per-course/', UpdateTotalScorePerCourseView.as_view(), name='update_total_score_per_course'),
     path('update-course-completion-status/', UpdateCourseCompletionStatusPerUserView.as_view(), name='update_course_completion_status'),
     path('display-client-course-progress/', DisplayClientCourseProgressView.as_view(), name='display_client_course_progress'),
-    path('display-client-course-completion-status/', DisplayClientCourseCompletionStatusView.as_view(), name='display_client_course_completion_status'),
-    
-    path('count-assigned-courses/', CountOfAssignedCoursesView.as_view(), name='count_assigned_courses'),
-    path('count-client-completed-courses/', CountClientCompletedCourseView.as_view(), name='count_client_completed_courses'),
+    path('count-courses-status/', CountCoursesStatusView.as_view(), name='count_client_completed_courses'),
     path('employee-dashboard/', EmployeeDashboard.as_view(), name='employee_dashboard'),
 
 

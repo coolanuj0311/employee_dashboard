@@ -682,7 +682,7 @@ class QuizAttemptHistory(models.Model):
         return answered, total
 
 # class QuizQuestion(models.Model):
-#     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
+#     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)q
 #     question = models.ForeignKey(Question, on_delete=models.CASCADE)
 
     
