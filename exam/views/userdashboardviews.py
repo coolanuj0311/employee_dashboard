@@ -181,11 +181,12 @@ class UpdateCompleteQuizCountView(APIView):
                 quiz_score.save()
                 return Response({'message': 'Completed quiz count updated successfully'}, status=status.HTTP_200_OK)
             else:
-                raise NotFound(detail='No completed quiz found for the user and course')
-        except QuizScore.DoesNotExist:
-            raise NotFound(detail='Quiz score record not found')
-        except Exception as e:
+                raise QuizScore.DoesNotExist('No completed quiz found for the user and course')
+        except (QuizScore.DoesNotExist, Exception) as e:
+            if isinstance(e, QuizScore.DoesNotExist):
+                raise NotFound(detail='Quiz score record not found')
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 
@@ -216,49 +217,54 @@ class UpdateTotalScorePerCourseView(APIView):
             quiz_score.save()
 
             return Response({'message': 'Total score per course updated successfully'}, status=status.HTTP_200_OK)
-        except QuizScore.DoesNotExist:
-            raise NotFound(detail='Quiz score record not found')
-        except Exception as e:
+        except (QuizScore.DoesNotExist, Exception) as e:
+            if isinstance(e, QuizScore.DoesNotExist):
+                raise NotFound(detail='Quiz score record not found')
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 class UpdateCourseCompletionStatusPerUserView(APIView):
     """
-        POST request
-        triggers when 
-        total_quizzes_per_course = completed_quiz_count in quiz score for that user in request
-        if total_quizzes_per_course == completed_quiz_count:
-            completion_status=True and in_progress_status =False
-        if total_quizzes_per_course > completed_quiz_count:
-            completion_status=False and in_progress_status =True
+    POST request
+    triggers when 
+    total_quizzes_per_course = completed_quiz_count in quiz score for that user in request
+    if total_quizzes_per_course == completed_quiz_count:
+        completion_status=True and in_progress_status =False
+    if total_quizzes_per_course > completed_quiz_count:
+        completion_status=False and in_progress_status =True
     """
     def post(self, request):
-        # Extract data from request
-        course_id = request.data.get('course_id')
-        user_id = request.data.get('user_id')
-
-        # Validate request data
-        if not (course_id and user_id):
-            return Response({'error': 'course_id and user_id are required'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Retrieve quiz score record for the user and course
         try:
+            # Extract data from request
+            course_id = request.data.get('course_id')
+            user_id = request.data.get('user_id')
+
+            # Validate request data
+            if not (course_id and user_id):
+                return Response({'error': 'course_id and user_id are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Retrieve quiz score record for the user and course
             quiz_score = QuizScore.objects.get(course_id=course_id, enrolled_user_id=user_id)
-        except QuizScore.DoesNotExist:
-            return Response({'error': 'Quiz score record not found'}, status=status.HTTP_404_NOT_FOUND)
 
-        # Check if completion status needs to be updated
-        if quiz_score.total_quizzes_per_course == quiz_score.completed_quiz_count:
-            quiz_score.completion_status = True
-            quiz_score.in_progress_status = False
-        elif quiz_score.total_quizzes_per_course > quiz_score.completed_quiz_count:
-            quiz_score.completion_status = False
-            quiz_score.in_progress_status = True
+            # Check if completion status needs to be updated
+            if quiz_score.total_quizzes_per_course == quiz_score.completed_quiz_count:
+                quiz_score.completion_status = True
+                quiz_score.in_progress_status = False
+            elif quiz_score.total_quizzes_per_course > quiz_score.completed_quiz_count:
+                quiz_score.completion_status = False
+                quiz_score.in_progress_status = True
 
-        # Save the updated quiz score record
-        quiz_score.save()
+            # Save the updated quiz score record
+            quiz_score.save()
 
-        return Response({'message': 'Course completion status updated successfully'}, status=status.HTTP_200_OK)
+            return Response({'message': 'Course completion status updated successfully'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            if isinstance(e, QuizScore.DoesNotExist):
+                return Response({'error': 'Quiz score record not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 
 
 
