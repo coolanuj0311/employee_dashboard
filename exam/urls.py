@@ -64,12 +64,13 @@ from django.urls import path
 from .views.userdashboardviews import (
     CreateCourseCompletionStatusPerUserView,
     CreateQuizScoreView,
+    EmployeeDashboard,
     UpdateCompleteQuizCountView,
     UpdateTotalScorePerCourseView,
     UpdateCourseCompletionStatusPerUserView,
     DisplayClientCourseProgressView,
     DisplayClientCourseCompletionStatusView,
-    CountOfAssignedCoursesView, CountClientCompletedCourseView,employee_dashboard
+    CountOfAssignedCoursesView, CountClientCompletedCourseView,
 
 )
 
@@ -158,7 +159,7 @@ urlpatterns = [
     
     path('count-assigned-courses/', CountOfAssignedCoursesView.as_view(), name='count_assigned_courses'),
     path('count-client-completed-courses/', CountClientCompletedCourseView.as_view(), name='count_client_completed_courses'),
-    path('employee-dashboard/', employee_dashboard, name='employee_dashboard'),
+    path('employee-dashboard/', EmployeeDashboard.as_view(), name='employee_dashboard'),
 
 
 
