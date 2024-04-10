@@ -61,6 +61,8 @@ from exam.models.allmodels import CourseCompletionStatus, QuizScore,CourseEnroll
 
 from rest_framework.exceptions import NotFound
 
+from django.db.models import Q
+
 class CreateCourseCompletionStatusPerUserView(APIView):
     """
     allowed for client admin
@@ -88,17 +90,20 @@ class CreateCourseCompletionStatusPerUserView(APIView):
             if not course_ids or not user_ids:
                 return Response({'error': 'course_id and user_id lists are required'}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Create course completion status records
+            # Create course completion status records only if they don't already exist
             course_completion_statuses = []
             for course_id in course_ids:
                 for user_id in user_ids:
-                    course_completion_status = CourseCompletionStatus(
-                        enrolled_user_id=user_id,
-                        course_id=course_id,
-                        completion_status=False,
-                        in_progress_status=False
-                    )
-                    course_completion_statuses.append(course_completion_status)
+                    # Check if a record already exists for this combination
+                    if not CourseCompletionStatus.objects.filter(Q(course_id=course_id) & Q(enrolled_user_id=user_id)).exists():
+                        # Create a new record only if it doesn't exist
+                        course_completion_status = CourseCompletionStatus(
+                            enrolled_user_id=user_id,
+                            course_id=course_id,
+                            completion_status=False,
+                            in_progress_status=False
+                        )
+                        course_completion_statuses.append(course_completion_status)
 
             # Save course completion status records to the database
             CourseCompletionStatus.objects.bulk_create(course_completion_statuses)
@@ -106,6 +111,7 @@ class CreateCourseCompletionStatusPerUserView(APIView):
             return Response({'message': 'Course completion statuses created successfully'}, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     
 class UpdateCompleteQuizCountView(APIView):
     """
