@@ -113,6 +113,11 @@ class CreateCourseCompletionStatusPerUserView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+
+
 class UpdateCompleteQuizCountView(APIView):
     """
     POST request
@@ -131,22 +136,24 @@ class UpdateCompleteQuizCountView(APIView):
             if not (course_id and user_id):
                 return Response({'error': 'course_id and user_id are required'}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Filter quiz attempt history for completed quizzes
-            completed_quizzes = QuizAttemptHistory.objects.filter(course_id=course_id, enrolled_user_id=user_id, complete=True)
+            # Get distinct completed quizzes for the user and course
+            completed_quizzes = QuizAttemptHistory.objects.filter(course_id=course_id, enrolled_user_id=user_id, complete=True).values('quiz_id').distinct()
 
-            # Check if the filtered instance already exists
-            if completed_quizzes.exists() and completed_quizzes.count() == 1:
+            # Ensure at least one completed quiz is found
+            if completed_quizzes.exists():
                 # Update completed_quiz_count for the corresponding record
                 quiz_score, created = QuizScore.objects.get_or_create(course_id=course_id, enrolled_user_id=user_id, defaults={'completed_quiz_count': 0})
                 if not created:  # If QuizScore instance already existed
-                    quiz_score.completed_quiz_count += 1
+                    # Increment completed_quiz_count by the number of distinct completed quizzes
+                    quiz_score.completed_quiz_count += completed_quizzes.count()
                     quiz_score.save()
                 return Response({'message': 'Completed quiz count updated successfully'}, status=status.HTTP_200_OK)
             else:
-                # No completed quizzes found or multiple completed quizzes found
-                return Response({'error': 'No completed quizzes found or multiple completed quizzes found'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'error': 'No completed quizzes found for the user and course'}, status=status.HTTP_400_BAD_REQUEST)
+
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 
