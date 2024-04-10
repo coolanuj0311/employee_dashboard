@@ -107,11 +107,6 @@ class CreateCourseCompletionStatusPerUserView(APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-
 class UpdateCompleteQuizCountView(APIView):
     """
     POST request
@@ -152,9 +147,6 @@ class UpdateCompleteQuizCountView(APIView):
 
 
 from django.utils import timezone
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
 
 
 class CreateQuizScoreView(APIView):
@@ -228,21 +220,6 @@ class CreateQuizScoreView(APIView):
           return 0  # Return 0 in case of error
 
 
-
-
-
-
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-
-
 class UpdateTotalScorePerCourseView(APIView):
     """
     POST request
@@ -262,7 +239,22 @@ class UpdateTotalScorePerCourseView(APIView):
                 return Response({'error': 'course_id and user_id are required'}, status=status.HTTP_400_BAD_REQUEST)
 
             # Get unique instances of completed quizzes for the user and course
-            unique_quizzes = QuizAttemptHistory.objects.filter(course_id=course_id, enrolled_user_id=user_id, complete=True).order_by('quiz_id').distinct('quiz_id')
+            
+            from django.db.models import Max
+
+            last_attempted_quizzes = (
+                QuizAttemptHistory.objects.filter(course_id=course_id, enrolled_user_id=user_id, complete=True)
+                .values('quiz_id')
+                .annotate(last_attempt=Max('created_at'))
+                .order_by('-last_attempt')
+            )
+
+            unique_quizzes = QuizAttemptHistory.objects.filter(
+                course_id=course_id,
+                enrolled_user_id=user_id,
+                complete=True,
+                created_at__in=[quiz['last_attempt'] for quiz in last_attempted_quizzes]
+            )
 
             # Calculate total score for the user and course
             total_score = 0
@@ -293,6 +285,9 @@ class UpdateTotalScorePerCourseView(APIView):
 
 
 
+from django.shortcuts import get_object_or_404
+from django.db import transaction
+
 class UpdateCourseCompletionStatusPerUserView(APIView):
     """
     POST request
@@ -304,6 +299,7 @@ class UpdateCourseCompletionStatusPerUserView(APIView):
         completion_status=False and in_progress_status =True
         
     """
+    @transaction.atomic
     def post(self, request):
         try:
             # Extract data from request
@@ -314,30 +310,30 @@ class UpdateCourseCompletionStatusPerUserView(APIView):
             if not (course_id and user_id):
                 return Response({'error': 'course_id and user_id are required'}, status=status.HTTP_400_BAD_REQUEST)
 
+            # Retrieve or create CourseCompletionStatus record
+            course_completion_status, created = CourseCompletionStatus.objects.get_or_create(
+                course_id=course_id, enrolled_user_id=user_id
+            )
+
             # Retrieve quiz score record for the user and course
-            quiz_score = QuizScore.objects.get(course_id=course_id, enrolled_user_id=user_id)
+            quiz_score = get_object_or_404(QuizScore, course_id=course_id, enrolled_user_id=user_id)
 
-            # Check if completion status needs to be updated
+            # Update completion status
             if quiz_score.total_quizzes_per_course == quiz_score.completed_quiz_count:
-                quiz_score.completion_status = True
-                quiz_score.in_progress_status = False
+                course_completion_status.completion_status = True
+                course_completion_status.in_progress_status = False
             elif quiz_score.total_quizzes_per_course > quiz_score.completed_quiz_count:
-                quiz_score.completion_status = False
-                quiz_score.in_progress_status = True
+                course_completion_status.completion_status = False
+                course_completion_status.in_progress_status = True
 
-            # Save the updated quiz score record
-            quiz_score.save()
+            # Save the updated CourseCompletionStatus record
+            course_completion_status.save()
 
             return Response({'message': 'Course completion status updated successfully'}, status=status.HTTP_200_OK)
         except Exception as e:
             if isinstance(e, QuizScore.DoesNotExist):
                 return Response({'error': 'Quiz score record not found'}, status=status.HTTP_404_NOT_FOUND)
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-
-
-
 
 
 class DisplayClientCourseProgressView(APIView):
@@ -400,11 +396,6 @@ class DisplayClientCourseProgressView(APIView):
             return Response({'progress': progress_data}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-
-
-
 
 class CountCoursesStatusView(APIView):
     """
