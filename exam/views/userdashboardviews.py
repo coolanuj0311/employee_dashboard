@@ -1,3 +1,5 @@
+import json
+from django.http import JsonResponse
 from django.utils import timezone
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, render
@@ -23,6 +25,7 @@ from exam.models.allmodels import (
     Quiz,
     Question,
     QuizAttemptHistory
+    ,CourseCompletionStatusPerUser
 )
 
 from rest_framework.exceptions import NotFound, ValidationError
@@ -56,14 +59,16 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from rest_framework.views import APIView
-from exam.models.allmodels import CourseCompletionStatus, QuizScore,CourseEnrollment,Quiz,QuizAttemptHistory
+from exam.models.allmodels import  QuizScore,CourseEnrollment,Quiz,QuizAttemptHistory
 
 
 from rest_framework.exceptions import NotFound
-
+from custom_authentication.custom_mixins import ClientAdminMixin, ClientMixin, SuperAdminMixin
 from django.db.models import Q
 
-class CreateCourseCompletionStatusPerUserView(APIView):
+
+class CreateCourseCompletionStatusPerUserView(ClientAdminMixin, APIView):
+# class CreateCourseCompletionStatusPerUserView(APIView):
     """
     allowed for client admin
     POST request
@@ -82,7 +87,19 @@ class CreateCourseCompletionStatusPerUserView(APIView):
     """
     def post(self, request):
         try:
-            # Parse request data
+            user_header = request.headers.get("user")
+            if user_header:
+                user = json.loads(user_header)
+                role_id = user.get("role")
+            else:
+                # Handle case where user information is not provided
+                return JsonResponse({"error": "User information not provided"}, status=400)
+ 
+            # Check if the user has client admin privileges
+            if not self.has_client_admin_privileges(request):
+                return JsonResponse({"error": "You do not have permission to access this resource"}, status=403)
+            
+        
             course_ids = request.data.get('course_id', [])
             user_ids = request.data.get('user_id', [])
 
@@ -90,14 +107,20 @@ class CreateCourseCompletionStatusPerUserView(APIView):
             if not course_ids or not user_ids:
                 return Response({'error': 'course_id and user_id lists are required'}, status=status.HTTP_400_BAD_REQUEST)
 
+            # Additional validation
+            if not all(isinstance(course_id, int) for course_id in course_ids):
+                return Response({'error': 'Invalid course_id format'}, status=status.HTTP_400_BAD_REQUEST)
+            if not all(isinstance(user_id, int) for user_id in user_ids):
+                return Response({'error': 'Invalid user_id format'}, status=status.HTTP_400_BAD_REQUEST)
+
             # Create course completion status records only if they don't already exist
             course_completion_statuses = []
             for course_id in course_ids:
                 for user_id in user_ids:
                     # Check if a record already exists for this combination
-                    if not CourseCompletionStatus.objects.filter(Q(course_id=course_id) & Q(enrolled_user_id=user_id)).exists():
+                    if not CourseCompletionStatusPerUser.objects.filter(Q(course_id=course_id) & Q(enrolled_user_id=user_id)).exists():
                         # Create a new record only if it doesn't exist
-                        course_completion_status = CourseCompletionStatus(
+                        course_completion_status = CourseCompletionStatusPerUser(
                             enrolled_user_id=user_id,
                             course_id=course_id,
                             completion_status=False,
@@ -106,7 +129,7 @@ class CreateCourseCompletionStatusPerUserView(APIView):
                         course_completion_statuses.append(course_completion_status)
 
             # Save course completion status records to the database
-            CourseCompletionStatus.objects.bulk_create(course_completion_statuses)
+            CourseCompletionStatusPerUser.objects.bulk_create(course_completion_statuses)
 
             return Response({'message': 'Course completion statuses created successfully'}, status=status.HTTP_201_CREATED)
         except Exception as e:
@@ -118,7 +141,8 @@ from rest_framework.response import Response
 from rest_framework import status
 
 
-class UpdateCompleteQuizCountView(APIView):
+class UpdateCompleteQuizCountView(ClientAdminMixin,APIView):
+# class UpdateCompleteQuizCountView(APIView):
     """
     POST request
     triggered when quiz attempt history for that course, that user have completed =true , if set of quiz, course, user doesn't already have completed = true in table
@@ -128,7 +152,18 @@ class UpdateCompleteQuizCountView(APIView):
 
     def post(self, request):
         try:
-            # Extract data from request
+            user_header = request.headers.get("user")
+            if user_header:
+                user = json.loads(user_header)
+                role_id = user.get("role")
+            else:
+                # Handle case where user information is not provided
+                return JsonResponse({"error": "User information not provided"}, status=400)
+ 
+            # Check if the user has client admin privileges
+            if not self.has_client_admin_privileges(request):
+                return JsonResponse({"error": "You do not have permission to access this resource"}, status=403)
+
             course_id = request.data.get('course_id')
             user_id = request.data.get('user_id')
 
@@ -162,7 +197,8 @@ class UpdateCompleteQuizCountView(APIView):
 from django.utils import timezone
 
 
-class CreateQuizScoreView(APIView):
+class CreateQuizScoreView(ClientAdminMixin,APIView):
+# class CreateQuizScoreView(APIView):
     """
     allowed for client admin
     POST request
@@ -180,7 +216,17 @@ class CreateQuizScoreView(APIView):
     """
     def post(self, request):
         try:
-            # Parse request data
+            user_header = request.headers.get("user")
+            if user_header:
+                user = json.loads(user_header)
+                role_id = user.get("role")
+            else:
+                # Handle case where user information is not provided
+                return JsonResponse({"error": "User information not provided"}, status=400)
+ 
+            # Check if the user has client admin privileges
+            if not self.has_client_admin_privileges(request):
+                return JsonResponse({"error": "You do not have permission to access this resource"}, status=403)
             course_ids = request.data.get('course_id', [])
             user_ids = request.data.get('user_id', [])
 
@@ -233,7 +279,8 @@ class CreateQuizScoreView(APIView):
           return 0  # Return 0 in case of error
 
 
-class UpdateTotalScorePerCourseView(APIView):
+class UpdateTotalScorePerCourseView(ClientAdminMixin,APIView):
+# class UpdateTotalScorePerCourseView(APIView):
     """
     POST request
     triggered when quiz attempt history for that course, that user have completed = true 
@@ -243,7 +290,17 @@ class UpdateTotalScorePerCourseView(APIView):
     """
     def post(self, request):
         try:
-            # Extract data from request
+            user_header = request.headers.get("user")
+            if user_header:
+                user = json.loads(user_header)
+                role_id = user.get("role")
+            else:
+                # Handle case where user information is not provided
+                return JsonResponse({"error": "User information not provided"}, status=400)
+ 
+            # Check if the user has client admin privileges
+            if not self.has_client_admin_privileges(request):
+                return JsonResponse({"error": "You do not have permission to access this resource"}, status=403)
             course_id = request.data.get('course_id')
             user_id = request.data.get('user_id')
 
@@ -301,7 +358,8 @@ class UpdateTotalScorePerCourseView(APIView):
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 
-class UpdateCourseCompletionStatusPerUserView(APIView):
+class UpdateCourseCompletionStatusPerUserView(ClientAdminMixin,APIView):
+
     """
     POST request
     triggers when 
@@ -315,7 +373,17 @@ class UpdateCourseCompletionStatusPerUserView(APIView):
     @transaction.atomic
     def post(self, request):
         try:
-            # Extract data from request
+            user_header = request.headers.get("user")
+            if user_header:
+                user = json.loads(user_header)
+                role_id = user.get("role")
+            else:
+                # Handle case where user information is not provided
+                return JsonResponse({"error": "User information not provided"}, status=400)
+ 
+            # Check if the user has client admin privileges
+            if not self.has_client_admin_privileges(request):
+                return JsonResponse({"error": "You do not have permission to access this resource"}, status=403)
             course_id = request.data.get('course_id')
             user_id = request.data.get('user_id')
 
@@ -324,7 +392,7 @@ class UpdateCourseCompletionStatusPerUserView(APIView):
                 return Response({'error': 'course_id and user_id are required'}, status=status.HTTP_400_BAD_REQUEST)
 
             # Retrieve or create CourseCompletionStatus record
-            course_completion_status, created = CourseCompletionStatus.objects.get_or_create(
+            course_completion_status, created = CourseCompletionStatusPerUser.objects.get_or_create(
                 course_id=course_id, enrolled_user_id=user_id
             )
 
@@ -349,7 +417,8 @@ class UpdateCourseCompletionStatusPerUserView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class DisplayClientCourseProgressView(APIView):
+class DisplayClientCourseProgressView(ClientMixin,APIView):
+
     """
     GET request
     for user in request, if he has data in course enrollment table
@@ -360,7 +429,17 @@ class DisplayClientCourseProgressView(APIView):
 
     def get(self, request):
         try:
-            # Extract user ID from request
+            user_header = request.headers.get("user")
+            if user_header:
+                user = json.loads(user_header)
+                role_id = user.get("role")
+            else:
+                # Handle case where user information is not provided
+                return JsonResponse({"error": "User information not provided"}, status=400)
+ 
+            # Check if the user has client admin privileges
+            if not self.has_client_privileges(request):
+                return JsonResponse({"error": "You do not have permission to access this resource"}, status=403)
             user_id = request.query_params.get('user_id')
 
             # Validate request data
@@ -410,14 +489,24 @@ class DisplayClientCourseProgressView(APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-class CountCoursesStatusView(APIView):
+class CountCoursesStatusView(ClientMixin,APIView):
     """
     GET request to count the number of active enrollments and course completion status for a user.
     """
 
     def get(self, request):
         try:
-            # Extract user ID from request
+            user_header = request.headers.get("user")
+            if user_header:
+                user = json.loads(user_header)
+                role_id = user.get("role")
+            else:
+                # Handle case where user information is not provided
+                return JsonResponse({"error": "User information not provided"}, status=400)
+ 
+            # Check if the user has client admin privileges
+            if not self.has_client_privileges(request):
+                return JsonResponse({"error": "You do not have permission to access this resource"}, status=403)
             user_id = request.query_params.get('user_id')
             if not user_id:
                 return Response({'error': 'user_id is required'}, status=status.HTTP_400_BAD_REQUEST)
@@ -426,9 +515,9 @@ class CountCoursesStatusView(APIView):
             active_enrollments_count = CourseEnrollment.objects.filter(user_id=user_id, active=True).count()
 
             # Count completed, in-progress, and not started courses
-            completed_courses_count = CourseCompletionStatus.objects.filter(enrolled_user_id=user_id, completion_status=True, in_progress_status=False).count()
-            in_progress_courses_count = CourseCompletionStatus.objects.filter(enrolled_user_id=user_id, completion_status=False, in_progress_status=True).count()
-            not_started_courses_count = CourseCompletionStatus.objects.filter(enrolled_user_id=user_id, completion_status=False, in_progress_status=False).count()
+            completed_courses_count = CourseCompletionStatusPerUser.objects.filter(enrolled_user_id=user_id, completion_status=True, in_progress_status=False).count()
+            in_progress_courses_count = CourseCompletionStatusPerUser.objects.filter(enrolled_user_id=user_id, completion_status=False, in_progress_status=True).count()
+            not_started_courses_count = CourseCompletionStatusPerUser.objects.filter(enrolled_user_id=user_id, completion_status=False, in_progress_status=False).count()
 
             return Response({
                 'active_enrollments_count': active_enrollments_count,

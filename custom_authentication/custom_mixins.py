@@ -76,7 +76,7 @@ class ClientAdminMixin:
             user = json.loads(user_header)
             role_id = user.get("role")
                 # =================================================================
-        client_admin_resources = {1, 3, 4, 6}  
+        client_admin_resources = {1}  
         
         # user = request.user
         print(user)
@@ -99,7 +99,7 @@ class ClientMixin:
             user = json.loads(user_header)
             role_id = user.get("role")
                 # =================================================================
-        client_resources = {1, 4, 6} 
+        client_resources = {2}
         
         # user = request.user
         print(user)
