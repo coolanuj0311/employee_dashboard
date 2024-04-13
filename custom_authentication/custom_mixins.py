@@ -45,69 +45,109 @@ allowed_resources:
 # class ClientMixin(BaseAccessMixin):
 #     allowed_resources = {1, 4, 6}
 
+import json
+from django.core.exceptions import ObjectDoesNotExist  # Import the appropriate exception
+
 class SuperAdminMixin:
     # permission_classes = [permissions.IsAuthenticated]
 
     def has_super_admin_privileges(self, request):
-                # =================================================================
-        user_header = request.headers.get("user")
-        if user_header:
-            user = json.loads(user_header)
-            role_id = user.get("role")
-                # =================================================================
-        super_admin_resources = {1, 2, 4, 5, 6}  
-        
-        # user = request.user
-        user_privileges = UserRolePrivileges.objects.filter(role=role_id) # role= user.role
-        print(user_privileges)
-        privileged_resources = {privilege.resource.id for privilege in user_privileges}
-        print(privileged_resources)
-        print('super admin')
-        
-        return super_admin_resources == privileged_resources
+        try:
+            user_header = request.headers.get("user")
+            if user_header:
+                user = json.loads(user_header)
+                role_id = user.get("role")
+
+            super_admin_resources = {1, 2, 4, 5, 6}  
+
+            # user = request.user
+            user_privileges = UserRolePrivileges.objects.filter(role=role_id) # role= user.role
+            print(user_privileges)
+            privileged_resources = {privilege.resource.id for privilege in user_privileges}
+            print(privileged_resources)
+            print('super admin')
+
+            return super_admin_resources == privileged_resources
+
+        except json.JSONDecodeError as e:
+            print(f"Error decoding JSON: {e}")
+            return False  # Return False indicating failure
+        except ObjectDoesNotExist as e:
+            print(f"Error fetching user privileges: {e}")
+            return False  # Return False indicating failure
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            return False  # Return False indicating failure
+
     
+import json
+from django.core.exceptions import ObjectDoesNotExist  # Import the appropriate exception
+
 class ClientAdminMixin:
     # permission_classes = [permissions.IsAuthenticated]
     
     def has_client_admin_privileges(self, request):
-                # =================================================================
-        user_header = request.headers.get("user")
-        if user_header:
-            user = json.loads(user_header)
-            role_id = user.get("role")
-                # =================================================================
-        client_admin_resources = {1}  
-        
-        # user = request.user
-        print(user)
+        try:
+            user_header = request.headers.get("user")
+            if user_header:
+                user = json.loads(user_header)
+                role_id = user.get("role")
 
-        user_privileges = UserRolePrivileges.objects.filter(role=role_id)
-        print(user_privileges)
-        privileged_resources = {privilege.resource.id for privilege in user_privileges}
-        print(privileged_resources)
-        print('client admin')
-        
-        return client_admin_resources == privileged_resources
+            client_admin_resources = {1}  
+            
+            # user = request.user
+            print(user)
+
+            try:
+                user_privileges = UserRolePrivileges.objects.filter(role=role_id)
+            except ObjectDoesNotExist as e:
+                print(f"Error fetching user privileges: {e}")
+                return False  # Return False indicating failure
+
+            privileged_resources = {privilege.resource.id for privilege in user_privileges}
+            print(privileged_resources)
+            print('client admin')
+            
+            return client_admin_resources == privileged_resources
+
+        except json.JSONDecodeError as e:
+            print(f"Error decoding JSON: {e}")
+            return False  # Return False indicating failure
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            return False  # Return False indicating failure
+
     
 class ClientMixin:
     # permission_classes = [permissions.IsAuthenticated]
     
     def has_client_privileges(self, request):
-                # =================================================================
-        user_header = request.headers.get("user")
-        if user_header:
-            user = json.loads(user_header)
-            role_id = user.get("role")
-                # =================================================================
-        client_resources = {2}
-        
-        # user = request.user
-        print(user)
+        try:
+            user_header = request.headers.get("user")
+            if user_header:
+                user = json.loads(user_header)
+                role_id = user.get("role")
 
-        user_privileges = UserRolePrivileges.objects.filter(role=role_id)
-        print(user_privileges)
-        privileged_resources = {privilege.resource.id for privilege in user_privileges}
-        print(privileged_resources)
-        print('client')
-        
-        return client_resources == privileged_resources
+            client_resources = {2}
+            
+            # user = request.user
+            print(user)
+
+            try:
+                user_privileges = UserRolePrivileges.objects.filter(role=role_id)
+            except ObjectDoesNotExist as e:
+                print(f"Error fetching user privileges: {e}")
+                return False  # Return False indicating failure
+
+            privileged_resources = {privilege.resource.id for privilege in user_privileges}
+            print(privileged_resources)
+            print('client')
+            
+            return client_resources == privileged_resources
+
+        except json.JSONDecodeError as e:
+            print(f"Error decoding JSON: {e}")
+            return False  # Return False indicating failure
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            return False  # Return False indicating failure

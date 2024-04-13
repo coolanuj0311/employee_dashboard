@@ -87,14 +87,6 @@ class CreateCourseCompletionStatusPerUserView(ClientAdminMixin, APIView):
     """
     def post(self, request):
         try:
-            user_header = request.headers.get("user")
-            if user_header:
-                user = json.loads(user_header)
-                role_id = user.get("role")
-            else:
-                # Handle case where user information is not provided
-                return JsonResponse({"error": "User information not provided"}, status=400)
- 
             # Check if the user has client admin privileges
             if not self.has_client_admin_privileges(request):
                 return JsonResponse({"error": "You do not have permission to access this resource"}, status=403)
@@ -152,14 +144,6 @@ class UpdateCompleteQuizCountView(ClientAdminMixin,APIView):
 
     def post(self, request):
         try:
-            user_header = request.headers.get("user")
-            if user_header:
-                user = json.loads(user_header)
-                role_id = user.get("role")
-            else:
-                # Handle case where user information is not provided
-                return JsonResponse({"error": "User information not provided"}, status=400)
- 
             # Check if the user has client admin privileges
             if not self.has_client_admin_privileges(request):
                 return JsonResponse({"error": "You do not have permission to access this resource"}, status=403)
@@ -216,14 +200,6 @@ class CreateQuizScoreView(ClientAdminMixin,APIView):
     """
     def post(self, request):
         try:
-            user_header = request.headers.get("user")
-            if user_header:
-                user = json.loads(user_header)
-                role_id = user.get("role")
-            else:
-                # Handle case where user information is not provided
-                return JsonResponse({"error": "User information not provided"}, status=400)
- 
             # Check if the user has client admin privileges
             if not self.has_client_admin_privileges(request):
                 return JsonResponse({"error": "You do not have permission to access this resource"}, status=403)
@@ -290,14 +266,6 @@ class UpdateTotalScorePerCourseView(ClientAdminMixin,APIView):
     """
     def post(self, request):
         try:
-            user_header = request.headers.get("user")
-            if user_header:
-                user = json.loads(user_header)
-                role_id = user.get("role")
-            else:
-                # Handle case where user information is not provided
-                return JsonResponse({"error": "User information not provided"}, status=400)
- 
             # Check if the user has client admin privileges
             if not self.has_client_admin_privileges(request):
                 return JsonResponse({"error": "You do not have permission to access this resource"}, status=403)
@@ -373,14 +341,6 @@ class UpdateCourseCompletionStatusPerUserView(ClientAdminMixin,APIView):
     @transaction.atomic
     def post(self, request):
         try:
-            user_header = request.headers.get("user")
-            if user_header:
-                user = json.loads(user_header)
-                role_id = user.get("role")
-            else:
-                # Handle case where user information is not provided
-                return JsonResponse({"error": "User information not provided"}, status=400)
- 
             # Check if the user has client admin privileges
             if not self.has_client_admin_privileges(request):
                 return JsonResponse({"error": "You do not have permission to access this resource"}, status=403)
@@ -429,14 +389,6 @@ class DisplayClientCourseProgressView(ClientMixin,APIView):
 
     def get(self, request):
         try:
-            user_header = request.headers.get("user")
-            if user_header:
-                user = json.loads(user_header)
-                role_id = user.get("role")
-            else:
-                # Handle case where user information is not provided
-                return JsonResponse({"error": "User information not provided"}, status=400)
- 
             # Check if the user has client admin privileges
             if not self.has_client_privileges(request):
                 return JsonResponse({"error": "You do not have permission to access this resource"}, status=403)
@@ -496,14 +448,6 @@ class CountCoursesStatusView(ClientMixin,APIView):
 
     def get(self, request):
         try:
-            user_header = request.headers.get("user")
-            if user_header:
-                user = json.loads(user_header)
-                role_id = user.get("role")
-            else:
-                # Handle case where user information is not provided
-                return JsonResponse({"error": "User information not provided"}, status=400)
- 
             # Check if the user has client admin privileges
             if not self.has_client_privileges(request):
                 return JsonResponse({"error": "You do not have permission to access this resource"}, status=403)
