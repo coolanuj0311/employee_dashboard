@@ -11,8 +11,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics
-from exam.serializers.editcourseserializers import EditCourseInstanceSerializer, NotificationSerializer
-from exam.models.allmodels import (
+from backend.serializers.editcourseserializers import EditCourseInstanceSerializer, NotificationSerializer
+from backend.models.allmodels import (
     ActivityLog,
     Course,
     Notification,
@@ -35,7 +35,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.utils.decorators import method_decorator
 
 # from exam.models.coremodels import *
-from exam.serializers.createcourseserializers import (
+from backend.serializers.createcourseserializers import (
     ActivateCourseSerializer,
     CourseSerializer, 
     CourseStructureSerializer,
@@ -59,11 +59,11 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from rest_framework.views import APIView
-from exam.models.allmodels import  QuizScore,CourseEnrollment,Quiz,QuizAttemptHistory
+from backend.models.allmodels import  QuizScore,CourseEnrollment,Quiz,QuizAttemptHistory
 
 
 from rest_framework.exceptions import NotFound
-from custom_authentication.custom_mixins import ClientAdminMixin, ClientMixin, SuperAdminMixin
+from core.custom_mixins import ClientAdminMixin, ClientMixin, SuperAdminMixin
 from django.db.models import Q
 
 

@@ -13,11 +13,11 @@ from django.core.validators import (
 )
 from django.utils.translation import gettext_lazy as _
 from django.utils.timezone import now
-from backend import settings
+from LMS import settings
 from django.db.models.signals import pre_save
 from model_utils.managers import InheritanceManager
 
-from exam.utils import unique_slug_generator
+from backend.utils import unique_slug_generator
 
 # from exam.utils import *
 from .coremodels import User, Customer #, UserRolePrivileges, Resources, CustomerResources

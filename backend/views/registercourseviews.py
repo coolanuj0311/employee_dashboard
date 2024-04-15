@@ -12,9 +12,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound, ValidationError
 from django.utils import timezone
-from exam.models.coremodels import *
-from exam.serializers.registercourseserializers import *
-from exam.models.allmodels import (
+from backend.models.coremodels import *
+from backend.serializers.registercourseserializers import *
+from backend.models.allmodels import (
     Course,
     CourseRegisterRecord,
     CourseEnrollment,

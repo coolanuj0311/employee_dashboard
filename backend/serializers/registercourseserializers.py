@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from exam.models.allmodels import Course, CourseRegisterRecord
-from exam.models.coremodels import Customer
+from backend.models.allmodels import Course, CourseRegisterRecord
+from backend.models.coremodels import Customer
 
 
 class FirstVersionActiveCourseListSerializer(serializers.ModelSerializer):

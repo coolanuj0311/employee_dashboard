@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from exam.models.allmodels import Course, CourseEnrollment
-from exam.models.coremodels import User
+from backend.models.allmodels import Course, CourseEnrollment
+from backend.models.coremodels import User
 
 class RegisteredCourseSerializer(serializers.ModelSerializer):
     class Meta:

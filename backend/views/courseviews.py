@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics
 # C:\Users\Anjali Sharma\Desktop\LMS\backend\custom_authentication\custom_mixins.py
 # from backend.custom_authentication.custom_mixins import SuperAdminMixin
-from exam.models.allmodels import (
+from backend.models.allmodels import (
     Course,
     CourseRegisterRecord,
     CourseEnrollment,
@@ -34,7 +34,7 @@ from django.views.generic import (
     UpdateView,
 )
 
-from exam.forms import (
+from backend.forms import (
     QuestionForm,
 )
 from rest_framework.exceptions import NotFound, ValidationError
@@ -44,8 +44,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, render, redirect
 from django.utils.decorators import method_decorator
-from exam.models.coremodels import *
-from exam.serializers.courseserializers import *
+from backend.models.coremodels import *
+from backend.serializers.courseserializers import *
 
 # TODO:
 '''

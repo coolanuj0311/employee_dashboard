@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from exam.models.allmodels import Course, CourseStructure, Question, Quiz, UploadReadingMaterial, UploadVideo
-from exam.models.coremodels import *
+from backend.models.allmodels import Course, CourseStructure, Question, Quiz, UploadReadingMaterial, UploadVideo
+from backend.models.coremodels import *
 
 
 

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from exam.models.allmodels import Choice, Course, CourseStructure, Question, UploadReadingMaterial, UploadVideo, Quiz
+from backend.models.allmodels import Choice, Course, CourseStructure, Question, UploadReadingMaterial, UploadVideo, Quiz
 
 class CreateCourseSerializer(serializers.ModelSerializer):
     class Meta:

@@ -1,6 +1,6 @@
 import json
 from rest_framework import permissions
-from exam.models.coremodels import UserRolePrivileges
+from backend.models.coremodels import UserRolePrivileges
 
 '''this is how base permission works :
 

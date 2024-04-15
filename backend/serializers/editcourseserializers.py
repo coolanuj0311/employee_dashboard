@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from exam.models.allmodels import Choice, Course, CourseStructure, Notification, Question, UploadReadingMaterial, UploadVideo, Quiz
+from backend.models.allmodels import Choice, Course, CourseStructure, Notification, Question, UploadReadingMaterial, UploadVideo, Quiz
 
 class EditCourseInstanceSerializer(serializers.Serializer):
     title = serializers.CharField(max_length=100, required=True)

@@ -6,8 +6,8 @@ from django.db import transaction
 
 from django.forms.models import inlineformset_factory
 
-from exam.models.coremodels import User
-from exam.models.allmodels import Question, Quiz, Choice
+from backend.models.coremodels import User
+from backend.models.allmodels import Question, Quiz, Choice
 
 class QuestionForm(forms.Form):
     def __init__(self, question, *args, **kwargs):
