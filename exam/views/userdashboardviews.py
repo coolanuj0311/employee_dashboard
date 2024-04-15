@@ -1,74 +1,34 @@
 import json
-from django.http import JsonResponse
-from django.utils import timezone
-from django.db.models import Q
-from django.shortcuts import get_object_or_404, render
+from django.views import View
+import pandas as pd
 import requests
-from rest_framework import status
+
 from django.contrib import messages
-from django.db import transaction
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from rest_framework import generics
-from exam.serializers.editcourseserializers import EditCourseInstanceSerializer, NotificationSerializer
-from exam.models.allmodels import (
-    ActivityLog,
-    Course,
-    Notification,
-    UploadVideo,
-    UploadReadingMaterial,
-    CourseStructure,
-    CourseRegisterRecord,
-    CourseEnrollment,
-    Progress,
-    Quiz,
-    Question,
-    QuizAttemptHistory
-    ,CourseCompletionStatusPerUser
-)
-
-from rest_framework.exceptions import NotFound, ValidationError
-
 from django.core.exceptions import PermissionDenied
+from django.db import transaction
+from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 
-# from exam.models.coremodels import *
-from exam.serializers.createcourseserializers import (
-    ActivateCourseSerializer,
-    CourseSerializer, 
-    CourseStructureSerializer,
-    CreateChoiceSerializer,
-    InActivateCourseSerializer, 
-    UploadReadingMaterialSerializer, 
-    UploadVideoSerializer, 
-    QuizSerializer, 
-    CreateCourseSerializer,
-    CreateUploadReadingMaterialSerializer,
-    CreateUploadVideoSerializer,
-    CreateQuizSerializer,
-    CreateQuestionSerializer,
-)
-import pandas as pd
-
-# =================================================================
-# employee dashboard
-# =================================================================
+from rest_framework import generics, status
+from rest_framework.exceptions import NotFound, ValidationError
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status
-
 from rest_framework.views import APIView
-from exam.models.allmodels import  QuizScore,CourseEnrollment,Quiz,QuizAttemptHistory
 
-
-from rest_framework.exceptions import NotFound
 from custom_authentication.custom_mixins import ClientAdminMixin, ClientMixin, SuperAdminMixin
-from django.db.models import Q
-
+from exam.models.allmodels import (
+    CourseCompletionStatusPerUser,
+    CourseEnrollment,
+    CourseStructure,
+    Quiz,
+    QuizAttemptHistory,
+    QuizScore,
+)
 
 class CreateCourseCompletionStatusPerUserView(ClientAdminMixin, APIView):
-# class CreateCourseCompletionStatusPerUserView(APIView):
     """
     allowed for client admin
     POST request
@@ -128,13 +88,8 @@ class CreateCourseCompletionStatusPerUserView(ClientAdminMixin, APIView):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-
-
 class UpdateCompleteQuizCountView(ClientAdminMixin,APIView):
-# class UpdateCompleteQuizCountView(APIView):
+
     """
     POST request
     triggered when quiz attempt history for that course, that user have completed =true , if set of quiz, course, user doesn't already have completed = true in table
@@ -172,17 +127,9 @@ class UpdateCompleteQuizCountView(ClientAdminMixin,APIView):
 
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-
-
-
-
-from django.utils import timezone
-
+        
 
 class CreateQuizScoreView(ClientAdminMixin,APIView):
-# class CreateQuizScoreView(APIView):
     """
     allowed for client admin
     POST request
@@ -243,8 +190,6 @@ class CreateQuizScoreView(ClientAdminMixin,APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    
-
     def get_total_quizzes_per_course(self, course_id):
         try:
         # Count the number of quizzes associated with the given course_id
@@ -256,7 +201,6 @@ class CreateQuizScoreView(ClientAdminMixin,APIView):
 
 
 class UpdateTotalScorePerCourseView(ClientAdminMixin,APIView):
-# class UpdateTotalScorePerCourseView(APIView):
     """
     POST request
     triggered when quiz attempt history for that course, that user have completed = true 
@@ -297,8 +241,8 @@ class UpdateTotalScorePerCourseView(ClientAdminMixin,APIView):
             # Calculate total score for the user and course
             total_score = 0
             for quiz_attempt in unique_quizzes:
-                total_score += (quiz_attempt.current_score / (len(quiz_attempt.question_list_order.split(','))
-))
+                total_score += (quiz_attempt.current_score / (len(quiz_attempt.question_list_order.split(','))-1))
+
 
             # Get total quizzes for the course
             total_quizzes = QuizScore.objects.get(course_id=course_id, enrolled_user_id=user_id).total_quizzes_per_course
@@ -319,12 +263,6 @@ class UpdateTotalScorePerCourseView(ClientAdminMixin,APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
-
-
-
-from django.shortcuts import get_object_or_404
-from django.db import transaction
 
 class UpdateCourseCompletionStatusPerUserView(ClientAdminMixin,APIView):
 
@@ -389,9 +327,9 @@ class DisplayClientCourseProgressView(ClientMixin,APIView):
 
     def get(self, request):
         try:
-            # Check if the user has client admin privileges
-            if not self.has_client_privileges(request):
-                return JsonResponse({"error": "You do not have permission to access this resource"}, status=403)
+            # # Check if the user has client admin privileges
+            # if not self.has_client_privileges(request):
+            #     return JsonResponse({"error": "You do not have permission to access this resource"}, status=403)
             user_id = request.query_params.get('user_id')
 
             # Validate request data
@@ -473,50 +411,46 @@ class CountCoursesStatusView(ClientMixin,APIView):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+# #for front end integration
+# class EmployeeDashboard(View):
+#     template_name = 'employee.html'
+#     error_template_name = 'error.html'
+#     completed_courses_api_url = 'http://127.0.0.1:8000/count-courses-status'
+#     course_progress_api_url = 'http://127.0.0.1:8000/display-client-course-progress/'
 
-from django.views import View
-from django.shortcuts import render
-import requests
+#     def get(self, request):
+#         user_id = request.GET.get('user_id')
+#         if not user_id:
+#             return render(request, self.error_template_name, {'error': 'user_id is required'})
 
-class EmployeeDashboard(View):
-    template_name = 'employee.html'
-    error_template_name = 'error.html'
-    completed_courses_api_url = 'http://127.0.0.1:8000/lms/count-courses-status'
-    course_progress_api_url = 'http://127.0.0.1:8000/lms/display-client-course-progress/'
+#         # Make request to count-client-completed-courses API
+#         completed_courses_response = requests.get(self.completed_courses_api_url, params={'user_id': user_id})
+#         if completed_courses_response.status_code == 200:
+#             completed_courses_data = completed_courses_response.json()
+#         else:
+#             return render(request, self.error_template_name, {'error': 'Failed to fetch data from completed courses API'})
 
-    def get(self, request):
-        user_id = request.GET.get('user_id')
-        if not user_id:
-            return render(request, self.error_template_name, {'error': 'user_id is required'})
+#         # Make request to display-client-course-progress API
+#         course_progress_response = requests.get(self.course_progress_api_url, params={'user_id': user_id})
+#         if course_progress_response.status_code == 200:
+#             course_progress_data = course_progress_response.json().get('progress', [])
+#         else:
+#             return render(request, self.error_template_name, {'error': 'Failed to fetch data from course progress API'})
 
-        # Make request to count-client-completed-courses API
-        completed_courses_response = requests.get(self.completed_courses_api_url, params={'user_id': user_id})
-        if completed_courses_response.status_code == 200:
-            completed_courses_data = completed_courses_response.json()
-        else:
-            return render(request, self.error_template_name, {'error': 'Failed to fetch data from completed courses API'})
+#         # Extracting relevant data from the responses
+#         completed_courses_count = completed_courses_data.get('completed_courses_count', 0)
+#         in_progress_courses_count = completed_courses_data.get('in_progress_courses_count', 0)
+#         not_started_courses_count = completed_courses_data.get('not_started_courses_count', 0)
+#         course_names = [entry.get('course_name', '') for entry in course_progress_data]
+#         progress_percentages = [entry.get('progress_percentage', 0) for entry in course_progress_data]
 
-        # Make request to display-client-course-progress API
-        course_progress_response = requests.get(self.course_progress_api_url, params={'user_id': user_id})
-        if course_progress_response.status_code == 200:
-            course_progress_data = course_progress_response.json().get('progress', [])
-        else:
-            return render(request, self.error_template_name, {'error': 'Failed to fetch data from course progress API'})
-
-        # Extracting relevant data from the responses
-        completed_courses_count = completed_courses_data.get('completed_courses_count', 0)
-        in_progress_courses_count = completed_courses_data.get('in_progress_courses_count', 0)
-        not_started_courses_count = completed_courses_data.get('not_started_courses_count', 0)
-        course_names = [entry.get('course_name', '') for entry in course_progress_data]
-        progress_percentages = [entry.get('progress_percentage', 0) for entry in course_progress_data]
-
-        return render(request, self.template_name, {
-            'completed_courses_count': completed_courses_count,
-            'in_progress_courses_count': in_progress_courses_count,
-            'not_started_courses_count': not_started_courses_count,
-            'course_names': course_names,
-            'progress_percentages': progress_percentages
-        })
+#         return render(request, self.template_name, {
+#             'completed_courses_count': completed_courses_count,
+#             'in_progress_courses_count': in_progress_courses_count,
+#             'not_started_courses_count': not_started_courses_count,
+#             'course_names': course_names,
+#             'progress_percentages': progress_percentages
+#         })
 
 
 # =================================================================

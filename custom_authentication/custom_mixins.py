@@ -69,15 +69,10 @@ class SuperAdminMixin:
 
             return super_admin_resources == privileged_resources
 
-        except json.JSONDecodeError as e:
-            print(f"Error decoding JSON: {e}")
+        except (json.JSONDecodeError, ObjectDoesNotExist, Exception) as e:
+            print(f"An error occurred: {e}")
             return False  # Return False indicating failure
-        except ObjectDoesNotExist as e:
-            print(f"Error fetching user privileges: {e}")
-            return False  # Return False indicating failure
-        except Exception as e:
-            print(f"An unexpected error occurred: {e}")
-            return False  # Return False indicating failure
+
 
     
 import json
@@ -95,9 +90,10 @@ class ClientAdminMixin:
 
             client_admin_resources = {1}  
             
-            # user = request.user
+            user = request.user
             print(user)
 
+            user_privileges = None
             try:
                 user_privileges = UserRolePrivileges.objects.filter(role=role_id)
             except ObjectDoesNotExist as e:
@@ -110,12 +106,10 @@ class ClientAdminMixin:
             
             return client_admin_resources == privileged_resources
 
-        except json.JSONDecodeError as e:
-            print(f"Error decoding JSON: {e}")
+        except (json.JSONDecodeError, Exception) as e:
+            print(f"An error occurred: {e}")
             return False  # Return False indicating failure
-        except Exception as e:
-            print(f"An unexpected error occurred: {e}")
-            return False  # Return False indicating failure
+
 
     
 class ClientMixin:
@@ -130,9 +124,10 @@ class ClientMixin:
 
             client_resources = {2}
             
-            # user = request.user
+            user = request.user
             print(user)
 
+            user_privileges = None
             try:
                 user_privileges = UserRolePrivileges.objects.filter(role=role_id)
             except ObjectDoesNotExist as e:
@@ -145,9 +140,6 @@ class ClientMixin:
             
             return client_resources == privileged_resources
 
-        except json.JSONDecodeError as e:
-            print(f"Error decoding JSON: {e}")
-            return False  # Return False indicating failure
-        except Exception as e:
-            print(f"An unexpected error occurred: {e}")
+        except (json.JSONDecodeError, Exception) as e:
+            print(f"An error occurred: {e}")
             return False  # Return False indicating failure

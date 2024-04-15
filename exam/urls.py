@@ -6,7 +6,6 @@ from .views.courseviews import (
     ActiveCourseListDisplayView,
     AllCourseListDisplayView,
     InActiveCourseListDisplayView,
-    # RegisterCoursesOnCostumerListDisplayView,
     CourseInstanceDetailDisplayView,
     SingleCourseStructureListDisplayView,
     ReadingMaterialInstanceDisplayView,
@@ -25,7 +24,6 @@ from .views.registercourseviews import (
     LMSCustomerListView,
     CreateCourseRegisterRecordView,
     DisplayCourseRegisterRecordView,
-    # DeleteCourseRegisterRecordView,
     DeleteSingleCourseRegisterRecordInstanceView,
     DeactivateCourseRegistrationRecordView,
     ActivateCourseRegistrationRecordView,
@@ -52,21 +50,13 @@ from .views.createcourseviews import (
     InActivateCourseView,
     CreateNewVersionCourseView
 )
-# from .views.editcourseviews import (
-#     EditCourseInstanceDetailsView,
-#     EditReadingMaterialView,
-#     EditVideoMaterialView,
-#     EditQuizDetailView,
-#     EditExistingQuestionDetailsView,
-#     EditQuestionChoicesView
-# )
 from django.urls import path
 from .views.userdashboardviews import (
     CountCoursesStatusView,
     CreateCourseCompletionStatusPerUserView,
     CreateQuizScoreView,
    
-    EmployeeDashboard,
+    # EmployeeDashboard,
     UpdateCompleteQuizCountView,
     UpdateTotalScorePerCourseView,
     UpdateCourseCompletionStatusPerUserView,
@@ -80,20 +70,9 @@ from .views.userdashboardviews import (
 
 
 urlpatterns = [
-    # path('courses/', CourseListView.as_view(), name='courses-list'),
-    # path('customers/', CostumerListView.as_view(), name='customers-list'),
-    # path('client-admin-courses/', ClientAdminCourseListView.as_view(), name='client-admin-courses-list'),
-    # path('client-admin-employees/', ClientAdminEmployeeListView.as_view(), name='client-admin-employees-list'),
-    # path('enrollments/', CourseEnrollmentDisplayView.as_view(), name='enrollments-list'),
-    
-    #courseview.py  views url
     path('courses/', AllCourseListDisplayView.as_view(), name='courses-list'),
     path('courses/active/', ActiveCourseListDisplayView.as_view(), name='active-courses-list'),
     path('courses/inactive/', InActiveCourseListDisplayView.as_view(), name='inactive-courses-list'),
-
-    # path('courses/registered/', RegisterCoursesOnCostumerListDisplayView.as_view(), name='registered-courses-list'),
-    # path('courses/unregistered/', UnRegisteredCoursesOnCostumerListDisplayView.as_view(), name='un-registered-courses-list'),
-    # path('courses/enrolled/', EnrolledCoursesListDisplayView.as_view(), name='enrolled-courses-list'),
     path('course/<int:course_id>/', CourseInstanceDetailDisplayView.as_view(), name='course'),
     path('course-structure/<int:course_id>/', SingleCourseStructureListDisplayView.as_view(), name='course-structure'),
     path('course/<int:course_id>/reading/<int:content_id>/', ReadingMaterialInstanceDisplayView.as_view(), name='course-reading-material-instance'),
@@ -158,7 +137,7 @@ urlpatterns = [
     path('update-course-completion-status/', UpdateCourseCompletionStatusPerUserView.as_view(), name='update_course_completion_status'),
     path('display-client-course-progress/', DisplayClientCourseProgressView.as_view(), name='display_client_course_progress'),
     path('count-courses-status/', CountCoursesStatusView.as_view(), name='count_client_completed_courses'),
-    path('employee-dashboard/', EmployeeDashboard.as_view(), name='employee_dashboard'),
+    # path('employee-dashboard/', EmployeeDashboard.as_view(), name='employee_dashboard'),
 
 
 
