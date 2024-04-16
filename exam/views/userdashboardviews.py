@@ -94,7 +94,7 @@ class UpdateCompleteQuizCountView(ClientAdminMixin, APIView):
     POST request triggered when quiz attempt history for that course, that user have completed = true,
     if set of quiz, course, user doesn't already have completed = true in table
     while updating instance:
-        completed_quiz_count = increment by 1
+        completed_quiz_count = count of distinct completed quizzes
     """
 
     def post(self, request):
@@ -110,41 +110,23 @@ class UpdateCompleteQuizCountView(ClientAdminMixin, APIView):
             if not (course_id and user_id):
                 return Response({'error': 'course_id and user_id are required'}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Get distinct completed quizzes for the user and course
-            completed_quizzes = QuizAttemptHistory.objects.filter(course_id=course_id, enrolled_user_id=user_id, complete=True).values('quiz_id').distinct().first()
+            # Count distinct completed quizzes for the user and course
+            completed_quizzes_count = QuizAttemptHistory.objects.filter(course_id=course_id, enrolled_user_id=user_id, complete=True).values('quiz_id').distinct().count()
 
-            # Ensure at least one completed quiz is found
-            if completed_quizzes:
-                # Initialize a set to keep track of counted quiz IDs
-                counted_quiz_ids = set()
+            # Update completed_quiz_count for the corresponding record
+            quiz_score, created = QuizScore.objects.get_or_create(
+                course_id=course_id,
+                enrolled_user_id=user_id,
+                defaults={'completed_quiz_count': 0}
+            )
+            quiz_score.completed_quiz_count = completed_quizzes_count
+            quiz_score.save()
 
-                # Check if the completed_quizzes is not None
-                if 'quiz_id' in completed_quizzes:
-                    # Extract the quiz_id
-                    quiz_id = completed_quizzes['quiz_id']
-
-                    # Check if the quiz ID has already been counted
-                    if quiz_id not in counted_quiz_ids:
-                        # Update completed_quiz_count for the corresponding record
-                        quiz_score, created = QuizScore.objects.get_or_create(
-                            course_id=course_id,
-                            enrolled_user_id=user_id,
-                            defaults={'completed_quiz_count': 0}
-                        )
-
-                        # Increment completed_quiz_count by 1
-                        quiz_score.completed_quiz_count += 1
-                        quiz_score.save()
-
-                        # Add the quiz_id to the set of counted quiz IDs
-                        counted_quiz_ids.add(quiz_id)
-
-                return Response({'message': 'Completed quiz count updated successfully'}, status=status.HTTP_200_OK)
-            else:
-                return Response({'error': 'No completed quizzes found for the user and course'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': 'Completed quiz count updated successfully'}, status=status.HTTP_200_OK)
 
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
         
 
@@ -284,7 +266,6 @@ class UpdateTotalScorePerCourseView(ClientAdminMixin,APIView):
 
 
 class UpdateCourseCompletionStatusPerUserView(ClientAdminMixin,APIView):
-
     """
     POST request
     triggers when 
@@ -343,7 +324,6 @@ class DisplayClientCourseProgressView(ClientMixin,APIView):
     display:
         completed_quiz_count
     """
-
     def get(self, request):
         try:
             # # Check if the user has client admin privileges
